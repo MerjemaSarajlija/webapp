@@ -1,12 +1,24 @@
 import { useEffect, useState } from 'react';
+import { format } from "date-fns";
+
 
 import { Heading, Box, Text } from '@chakra-ui/react';
 import { addMinutes, addDays } from 'date-fns';
 
 import DoctorSelector from '@/components/DoctorSelector';
 import SlotSelector from '@/components/SlotSelector';
-import { Doctor, Slot, useDoctorsQuery } from '@/generated/core.graphql';
+import { BookApp } from '@/components/SlotSelector/BookApp';
+import {
+  Doctor,
+  Slot,
+  useDoctorsQuery,
+  useSlotsQuery,
+} from '@/generated/core.graphql';
 import { SlotWithKey } from '@/types/domain';
+import moment from 'moment';
+
+const minStartDate = moment(new Date());
+const maxStartDate = moment(addDays(new Date(), 6));
 
 const startDate = new Date();
 const generateSlots = (): SlotWithKey[] => {
@@ -26,9 +38,35 @@ const Appointments = () => {
   const [slots, setSlots] = useState<SlotWithKey[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor>();
   const [isLoading] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<SlotWithKey>();
-  const minimumStartDate = slots?.[0]?.start;
-  const maximumStartDate = minimumStartDate && addDays(minimumStartDate, 30);
+  const [selectedSlot, setSelectedSlot] = useState();
+  const [slotIsChanged, setSlotIsChanged] = useState(false);
+  
+
+  const SLOTS = useSlotsQuery({
+    variables: {
+      from: minStartDate,
+      to: maxStartDate,
+    },
+  });
+
+
+
+  const allSlots = SLOTS?.data?.slots;
+
+  const getSlotsByDoctorId = (doctorId: any) => {
+    const filteredSlots = allSlots?.filter((item) => item.doctorId == doctorId);
+    return filteredSlots ?? [];
+  };
+
+ 
+
+  useEffect(() => {
+    if (selectedSlot != {}) {
+      setSlotIsChanged(true);
+    } else {
+      setSlotIsChanged(false);
+    }
+  }, [selectedSlot]);
 
   useEffect(() => {
     if (selectedDoctor) {
@@ -40,6 +78,14 @@ const Appointments = () => {
       setSlots([]);
     }
   }, [selectedDoctor]);
+
+  const backToSlotSelector = () => {
+    setSelectedSlot(undefined);
+  };
+
+  const onClose = () => {
+    setSelectedSlot(undefined);
+  };
 
   return (
     <Box>
@@ -55,16 +101,27 @@ const Appointments = () => {
         onChange={setSelectedDoctor}
       />
       {slots?.length > 0 ? (
-        <SlotSelector
-          minimumStartDate={minimumStartDate}
-          maximumStartDate={maximumStartDate}
-          availableSlots={slots}
-          value={selectedSlot}
-          onChange={setSelectedSlot}
-          loadingSlots={isLoading}
-        />
+        <>
+          {!selectedSlot && (
+            <SlotSelector
+             // minimumStartDate={minimumStartDate}
+              //maximumStartDate={maximumStartDate}
+              availableSlots={getSlotsByDoctorId(selectedDoctor?.id)}
+              value={selectedSlot}
+              onChange={setSelectedSlot}
+              loadingSlots={isLoading}
+            />
+          )}
+          {selectedSlot && (
+            <BookApp
+              selectedSlot={selectedSlot}
+              goBack={backToSlotSelector}
+              onClose={onClose}
+            />
+          )}
+        </>
       ) : (
-        <Text>No slots available</Text>
+        <Text></Text>
       )}
     </Box>
   );

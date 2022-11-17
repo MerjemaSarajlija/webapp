@@ -27,3 +27,6 @@ Use codegen to generate GraphQL hooks and typescript types:
 ```
 npm run codegen:coreapi
 ```
+
+
+TIME: 3 HOURS

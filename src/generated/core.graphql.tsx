@@ -16,6 +16,13 @@ export type Scalars = {
   DateTime: any;
 };
 
+export type AddAvailabilityInput = {
+  dayOfWeek: Scalars['Float'];
+  doctor: Scalars['Float'];
+  endTimeUtc: Scalars['String'];
+  startTimeUtc: Scalars['String'];
+};
+
 export type AddDoctorInput = {
   name: Scalars['String'];
 };
@@ -27,9 +34,22 @@ export type AddItemInput = {
 
 export type Appointment = {
   __typename?: 'Appointment';
+  description: Scalars['String'];
+  doctorId: Scalars['Float'];
   durationMinutes: Scalars['Float'];
   id: Scalars['Float'];
+  patientName: Scalars['String'];
   startTime: Scalars['DateTime'];
+};
+
+export type Availability = {
+  __typename?: 'Availability';
+  dayOfWeek: Scalars['Float'];
+  doctor: Doctor;
+  doctorId: Scalars['Float'];
+  endTimeUtc: Scalars['String'];
+  id: Scalars['Float'];
+  startTimeUtc: Scalars['String'];
 };
 
 export type BookAppointmentInput = {
@@ -53,9 +73,15 @@ export type Item = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addAvailability: Availability;
   addDoctor: Doctor;
   addItem: Item;
   bookAppointment: Appointment;
+};
+
+
+export type MutationAddAvailabilityArgs = {
+  availability: AddAvailabilityInput;
 };
 
 
@@ -100,6 +126,13 @@ export type SlotInput = {
   start: Scalars['DateTime'];
 };
 
+export type BookAppointmentMutationVariables = Exact<{
+  bookAppointmentInput: BookAppointmentInput;
+}>;
+
+
+export type BookAppointmentMutation = { __typename?: 'Mutation', bookAppointment: { __typename?: 'Appointment', startTime: any, doctorId: number, patientName: string, id: number, durationMinutes: number, description: string } };
+
 export type AddItemMutationVariables = Exact<{
   item: AddItemInput;
 }>;
@@ -117,7 +150,53 @@ export type ItemsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type ItemsQuery = { __typename?: 'Query', items: Array<{ __typename?: 'Item', id: number, name: string, description?: string | null }> };
 
+export type SlotsQueryVariables = Exact<{
+  to: Scalars['DateTime'];
+  from: Scalars['DateTime'];
+}>;
 
+
+export type SlotsQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', start: any, end: any, doctorId: number }> };
+
+
+export const BookAppointmentDocument = gql`
+    mutation BookAppointment($bookAppointmentInput: BookAppointmentInput!) {
+  bookAppointment(bookAppointmentInput: $bookAppointmentInput) {
+    startTime
+    doctorId
+    patientName
+    id
+    durationMinutes
+    description
+  }
+}
+    `;
+export type BookAppointmentMutationFn = Apollo.MutationFunction<BookAppointmentMutation, BookAppointmentMutationVariables>;
+
+/**
+ * __useBookAppointmentMutation__
+ *
+ * To run a mutation, you first call `useBookAppointmentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useBookAppointmentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [bookAppointmentMutation, { data, loading, error }] = useBookAppointmentMutation({
+ *   variables: {
+ *      bookAppointmentInput: // value for 'bookAppointmentInput'
+ *   },
+ * });
+ */
+export function useBookAppointmentMutation(baseOptions?: Apollo.MutationHookOptions<BookAppointmentMutation, BookAppointmentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<BookAppointmentMutation, BookAppointmentMutationVariables>(BookAppointmentDocument, options);
+      }
+export type BookAppointmentMutationHookResult = ReturnType<typeof useBookAppointmentMutation>;
+export type BookAppointmentMutationResult = Apollo.MutationResult<BookAppointmentMutation>;
+export type BookAppointmentMutationOptions = Apollo.BaseMutationOptions<BookAppointmentMutation, BookAppointmentMutationVariables>;
 export const AddItemDocument = gql`
     mutation addItem($item: AddItemInput!) {
   addItem(item: $item) {
@@ -224,3 +303,41 @@ export function useItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Item
 export type ItemsQueryHookResult = ReturnType<typeof useItemsQuery>;
 export type ItemsLazyQueryHookResult = ReturnType<typeof useItemsLazyQuery>;
 export type ItemsQueryResult = Apollo.QueryResult<ItemsQuery, ItemsQueryVariables>;
+export const SlotsDocument = gql`
+    query Slots($to: DateTime!, $from: DateTime!) {
+  slots(to: $to, from: $from) {
+    start
+    end
+    doctorId
+  }
+}
+    `;
+
+/**
+ * __useSlotsQuery__
+ *
+ * To run a query within a React component, call `useSlotsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSlotsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSlotsQuery({
+ *   variables: {
+ *      to: // value for 'to'
+ *      from: // value for 'from'
+ *   },
+ * });
+ */
+export function useSlotsQuery(baseOptions: Apollo.QueryHookOptions<SlotsQuery, SlotsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SlotsQuery, SlotsQueryVariables>(SlotsDocument, options);
+      }
+export function useSlotsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SlotsQuery, SlotsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SlotsQuery, SlotsQueryVariables>(SlotsDocument, options);
+        }
+export type SlotsQueryHookResult = ReturnType<typeof useSlotsQuery>;
+export type SlotsLazyQueryHookResult = ReturnType<typeof useSlotsLazyQuery>;
+export type SlotsQueryResult = Apollo.QueryResult<SlotsQuery, SlotsQueryVariables>;
