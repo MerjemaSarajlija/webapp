@@ -2,31 +2,33 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import { CheckIcon } from '@chakra-ui/icons';
 import { Flex, FlexProps, Text, Box, Button, Progress } from '@chakra-ui/react';
-import { isSameDay, format, isEqual } from 'date-fns';
+import { isSameDay, format, isEqual, addDays } from 'date-fns';
 import moment from 'moment';
 import { DayPickerSingleDateController } from 'react-dates';
 
 import { Slot } from '@/types/domain';
 
+import { BookApp } from './BookApp';
 import { Container } from './styled';
 
 import 'react-dates/initialize';
 import 'react-dates/lib/css/_datepicker.css';
 
+
 type Props = {
-  minimumStartDate: Date;
-  maximumStartDate: Date;
+ // minimumStartDate: Date;
+  //maximumStartDate: Date;
   availableSlots: Slot[];
   value?: Slot;
   onChange: (slot: Slot) => void;
   styleProps?: FlexProps;
   slotLoading?: Slot;
   loadingSlots: boolean;
-}
+};
 
 const SlotSelector: FC<Props> = ({
-  minimumStartDate,
-  maximumStartDate,
+ // minimumStartDate,
+  //maximumStartDate,
   availableSlots,
   loadingSlots,
   value,
@@ -34,20 +36,25 @@ const SlotSelector: FC<Props> = ({
   styleProps,
   ...props
 }) => {
-  const [date, setDate] = useState(
-    availableSlots?.[0]?.start || minimumStartDate,
+  const [date, setDate] = useState(new Date());
+  const [showForm, setShowForm] = useState(false);
+
+  console.log(date);
+
+  const onSlotSelected = useCallback(
+    (slot: Slot) => {
+      onChange(slot);
+    },
+    [onChange]
   );
 
-  const onSlotSelected = useCallback((slot: Slot) => {
-    onChange(slot);
-  }, [onChange]);
-
   const availableSlotsOnDate = useMemo(() => {
-    return availableSlots.filter((x) => isSameDay(x.start, date));
+    return availableSlots.filter((x) => isSameDay(new Date(x.start), date));
   }, [date, availableSlots]);
 
-  const minStartDate = moment(minimumStartDate);
-  const maxStartDate = moment(maximumStartDate);
+
+  const minStartDate = moment(new Date());
+  const maxStartDate = moment(addDays(new Date(), 6));
 
   return (
     <Container {...styleProps}>
@@ -65,16 +72,17 @@ const SlotSelector: FC<Props> = ({
         }}
         onDateChange={(d) => {
           if (d) {
+            console.log(d);
             setDate(d.toDate());
           }
         }}
         {...props}
       />
-      <Flex flexDirection="column" px="12px" w="100%">
-        <Text fontSize="17px" mb="20px" mt="22px" textAlign="left">
-          {format(date, 'eeee, MMMM dd')}
+      <Flex flexDirection='column' px='12px' w='100%'>
+        <Text fontSize='17px' mb='20px' mt='22px' textAlign='left'>
+          {moment(date).format('MMM Do YY')}
         </Text>
-        <Box flexGrow={1} overflow="auto" position="relative">
+        <Box flexGrow={1} overflow='auto' position='relative'>
           {loadingSlots ? (
             <Progress />
           ) : (
@@ -90,24 +98,25 @@ const SlotSelector: FC<Props> = ({
                   _hover={{
                     backgroundColor: 'white.10',
                   }}
-                  borderColor="white.10"
-                  colorScheme="gray"
-                  fontSize="16px"
-                  mb="8px"
+                  borderColor='white.10'
+                  colorScheme='gray'
+                  fontSize='16px'
+                  mb='8px'
                   onClick={() => onSlotSelected(slot)}
-                  py="16px"
-                  variant="outline"
-                  width="100%"
+                  py='16px'
+                  variant='outline'
+                  width='100%'
                   {...activeStyle}
                 >
-                  {format(slot.start, 'hh:mm a')}{' '}
-                  {isActive && <CheckIcon position="absolute" right="18px" />}
+                  {moment(slot.start).format('h:mma')}
+                  {isActive && <CheckIcon position='absolute' right='18px' />}
                 </Button>
               );
             })
           )}
         </Box>
       </Flex>
+      
     </Container>
   );
 };
